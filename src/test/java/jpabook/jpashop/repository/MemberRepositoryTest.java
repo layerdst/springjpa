@@ -261,6 +261,95 @@ class MemberRepositoryTest {
         //then
         assertThat(result).isEqualTo(3);
     }
+    
+    
+    @Test
+    public void fetchJoin() throws Exception{
+        //given
+        memberRepository.save(new Member("aaa", 10));
+        memberRepository.save(new Member("aaaa", 21));
+        memberRepository.save(new Member("asdaa", 12));
+        memberRepository.save(new Member("aaag", 23));
+        memberRepository.save(new Member("aava", 10));
+        memberRepository.save(new Member("abaa", 10));
+        memberRepository.save(new Member("aabba", 10));
+        memberRepository.save(new Member("aaba", 30));
+        List<Member> memberFetchJoin = memberRepository.findMemberFetchJoin();
+        System.out.println(memberFetchJoin.get(0));
+        //when
 
 
+        memberRepository.findByUsername("aaa");
+        memberRepository.findEntityGraphByUsername("aaaq");
+        //then
+    }
+
+
+    @Test
+    public void queryHint() throws Exception{
+        //given
+        Member member1 = new Member("member1", 10);
+
+        memberRepository.save(member1);
+        em.flush();
+        em.clear();
+
+        Member findMember = memberRepository.findById(member1.getId()).get();
+        findMember.setUsername("member2");
+
+        Member findMember2 = memberRepository.findReadOnlyByUsername("member2");
+        findMember2.setUsername("member2");
+        //when
+        em.flush();
+        //then
+    }
+
+
+    @Test
+    public void lock() throws Exception{
+        //given
+        Member member1 = new Member("member1", 10);
+        memberRepository.save(member1);
+        em.flush();
+        em.clear();
+
+        //when
+        memberRepository.findLockByUsername("member1");
+
+        //then
+    }
+
+
+    @Test
+    public void callCustom() throws Exception{
+        //given
+        Member member1 = new Member("member1", 10);
+        List<Member> result = memberRepository.findMemberCustom();
+
+        //when
+
+        //then
+    }
+
+
+    @Test
+    public void JpaEventBaseEntity() throws Exception{
+        //given
+        Member member = new Member("member1");
+        memberRepository.save(member); // PrePersist
+
+
+        Thread.sleep(100);
+        member.setUsername("member2");
+
+        em.flush(); //Preupdate
+        em.clear();
+        //when
+
+        //then
+
+        Member member1 = memberRepository.findById(member.getId()).get();
+        System.out.println(member1.getCreateDate());
+        System.out.println(member1.getUpdateDate());
+    }
 }

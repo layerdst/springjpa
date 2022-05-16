@@ -3,16 +3,17 @@ package jpabook.jpashop.repository;
 import jpabook.jpashop.dto.MemberDto;
 import jpabook.jpashop.entity.Member;
 import org.springframework.data.domain.*;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
-import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jpa.repository.*;
 import org.springframework.data.repository.query.Param;
 
+import javax.persistence.Entity;
+import javax.persistence.LockModeType;
+import javax.persistence.QueryHint;
 import javax.swing.text.html.Option;
 import java.util.List;
 import java.util.Optional;
 
-public interface MemberRepository  extends JpaRepository<Member, Long> {
+public interface MemberRepository  extends JpaRepository<Member, Long>, MemberRepositoryCustom {
 
     List<Member> findByUsername(String username);
     List<Member> findByUsernameAndAgeGreaterThan(String username, int age);
@@ -81,8 +82,33 @@ public interface MemberRepository  extends JpaRepository<Member, Long> {
     @Query("update Member m set m.age = m.age+1 where m.age >= :age")
     int bulkAgePlus(@Param("age") int age);
 
+    @Query("select m from Member m left join fetch m.team")
+    List<Member> findMemberFetchJoin();
 
 
+    /**
+     * fetch 조인을 강제하는 방법은 기존의 Repository method를 override 하는 방법인데,
+     * EntiryGraph 어노테이션을 추가하면 다음과 같이 패치조인이 가능하다.
+     *
+     */
+    @Override
+    @EntityGraph(attributePaths = {"team"})
+    List<Member> findAll();
+
+    @EntityGraph(attributePaths = {"team"})
+    @Query("select m from Member m")
+    List<Member> findMemberEntityGraph();
+
+    @EntityGraph(attributePaths = ("team"))
+    List<Member> findEntityGraphByUsername(@Param("username") String username);
+
+
+    @QueryHints(value = @QueryHint(name = "org.hibernate.readOnly", value = "true"))
+    Member findReadOnlyByUsername(String username);
+
+
+    @Lock(LockModeType.PESSIMISTIC_READ)
+    List<Member> findLockByUsername(String username);
 
 
 }

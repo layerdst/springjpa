@@ -1,6 +1,8 @@
 package jpabook.jpashop.entity;
 
 import jpabook.jpashop.repository.MemberJpaRepository;
+import jpabook.jpashop.repository.MemberRepository;
+import jpabook.jpashop.repository.TeamRepository;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +26,12 @@ class MemberTest {
 
     @Autowired
     private MemberJpaRepository memberJpaRepository;
+
+    @Autowired
+    private MemberRepository memberRepository;
+
+    @Autowired
+    private TeamRepository teamRepository;
 
     @Test
     public void testEntity(){
@@ -87,6 +95,35 @@ class MemberTest {
 
         //when
 
+        //then
+    }
+    
+
+    @Test
+    public void findMemberLazy() throws Exception{
+        //given
+        Team teamA = new Team("teamA");
+        Team teamB = new Team("teamB");
+
+        teamRepository.save(teamA);
+        teamRepository.save(teamB);
+
+        Member member1 = new Member("member1", 10, teamA);
+        Member member2 = new Member("member2", 10, teamB);
+
+        memberJpaRepository.save(member1);
+        memberJpaRepository.save(member2);
+
+        em.flush();
+        em.clear();
+
+        List<Member> all = memberRepository.findAll();
+        //when
+
+        for(Member m : all){
+            System.out.println(m.getTeam().getName());
+
+        }
         //then
     }
 }
