@@ -29,7 +29,6 @@ public interface MemberRepository  extends JpaRepository<Member, Long>, MemberRe
     @Query("select new jpabook.jpashop.dto.MemberDto (m.id, m.username, t.name) from Member m join m.team t")
     List<MemberDto> findMemberDto();
 
-
     /**
      *
      * Parameter IN 절도 지원한다.
@@ -109,6 +108,13 @@ public interface MemberRepository  extends JpaRepository<Member, Long>, MemberRe
 
     @Lock(LockModeType.PESSIMISTIC_READ)
     List<Member> findLockByUsername(String username);
+
+    /**
+     * SpringJPA 는 Repository 계층에서 Transaction 이 무조건 동작하게 설계되어 있다.
+     * Transaction 의 기본속성은 readOnly 이며, 단순조회로서 약간의 성능 향상을 얻을 수 있다.
+     *  save 메서드는 새로운 Entity 라면 persist, 아니면 merge로 작동하는데
+     *  merge 보다 변경감지를 이용하는게 좋다.
+     */
 
 
 }

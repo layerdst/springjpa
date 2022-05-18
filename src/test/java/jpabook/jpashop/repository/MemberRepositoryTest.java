@@ -3,14 +3,12 @@ package jpabook.jpashop.repository;
 import jpabook.jpashop.dto.MemberDto;
 import jpabook.jpashop.entity.Member;
 import jpabook.jpashop.entity.Team;
+import org.assertj.core.api.Assert;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Slice;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.*;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -350,6 +348,40 @@ class MemberRepositoryTest {
 
         Member member1 = memberRepository.findById(member.getId()).get();
         System.out.println(member1.getCreateDate());
-        System.out.println(member1.getUpdateDate());
+//        System.out.println(member1.getUpdateDate());
+    }
+
+    @Test
+    public void queryByExample(){
+        Team teamA = new Team("teamA");
+        em.persist(teamA);
+
+        Member m1 = new Member("m1", 0, teamA);
+        Member m2 = new Member("m2", 0, teamA);
+
+        em.persist(m1);
+        em.persist(m2);
+
+        em.flush();
+        em.clear();
+
+        Member member = new Member("m1");
+        Example<Member> example =Example.of(member);
+
+        List<Member> all = memberRepository.findAll(example);
+
+
+        Assertions.assertThat(all.get(0).getUsername()).isEqualTo("m1");
+
+    }
+    
+    
+    @Test
+    public void findall() throws Exception{
+        //given
+            
+        //when
+        
+        //then
     }
 }
