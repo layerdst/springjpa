@@ -140,6 +140,7 @@
     @Query("select new package.package..Dto(m.id, m.username... )) from Member m join m.team t")
     List<MemberDto> findMemberDto();
     ```
+  
 ## Parameter Binding
 Parameter 바인딩은 위치(?) 와 이름기반(:) 으로 나뉘어진다. 주로 이름기반을 사용하는게 좋다
 또한 Spring JPA 에서는 in 절 쿼리내 삽입가능한 컬랙션 타입도 지원이 가능하다
@@ -147,8 +148,63 @@ Parameter 바인딩은 위치(?) 와 이름기반(:) 으로 나뉘어진다. 주
     
     @Query("select m from Member m where m.username in :names" )
     List<Member> findByNames(@Param("names") List<String> names);
-```
- 
+    
+## 반환 타입
+스프링 데이터 JPA는 유연한 반환 타입 지원
+    
+    List<Member> findByUsername(String name);
+    Member findUsername(Sting name);
+    Optional<Member> findByUsername(String name);
+    
+조회 결과
+    - 컬렉션 : 결과가 없으면 빈컬렉션 반환
+    - 단건 : 결과없을시 null, 결과가 2건 이상 : NonUniqueResultExeption 발생
+    
+    
+
+## 페이징과 정렬
+JPA 
+    
+    public List<Member> findByPage(int age, int offset, int limit){
+        return em.createQuery("select m from Member m where m.age = :age order by m.username desc")
+                .setParameter("age", age)
+                .setFirstResult(offset)
+                .getResultList();
+   
+    }
+    
+    public long totalCount(int age){
+        return em.createQuery("select count(m) from Member m where m.age=:age", Long.class)
+                .setParameter("age", age)
+                .getSigleResult();
+  
+    } 
+    
+Spring JPA
+    
+    public interface MemberRepository extends JpaRepository<Member, Long> {
+        // count 쿼리 사용
+        Page<Member> findByAge(int age, Pageable pageable);
+        
+        // count 쿼리 사용안함
+        Slice<Member> findByAge(int age, Pageable pageable);
+        
+        // count 쿼리 사용안함
+        List<Member> findByAge(int age, Pageable pageable);
+        Page<Member> findByAge(int age, Sort sort);
+    }
+    
+    @Service
+    public class MemberService{
+        PageRequest pageRequest = PageRequest.of(0,3,Sort.by(Sort.Direction.DESC, "username"));
+        Page<Member> page = memberRepository.findByAge(10, pageRequest);
+    } 
+
+Spring JPA - CountQuery 추가 사용하기  
+    
+    @Query(value = "select m from Member m", countQuery="select count(m.username) from Member m")
+    Page<Member> findMemberAllcountCountBy(Pageable pageable); 
+    
 
 
 - JPA FIND 
