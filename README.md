@@ -43,7 +43,7 @@
     
 ## JPA -> SPRING JPA
 - Spring JPA는 JPA를 사용하면서 공통적으로 많이 사용되는 메서드를 상속받아 사용할 수 있는 인터페이스이다.
-- SAVE
+- **SAVE**
     ```
     *JPA*
     public Team save(Team team){
@@ -61,7 +61,7 @@
   ```
 
 
-- FIND
+- **FIND**
     ```
     *JPA*
     public Team findById(Long id){
@@ -99,7 +99,7 @@
     public Team findByIdAndName(String name, Long id)
   
 ## Named Qeury 사용하기
-- 엔티티에 NamedQuery 정리하기
+- **엔티티에 NamedQuery 정리하기**
     ```
   @Entity
   @NamedQuery(
@@ -111,7 +111,7 @@
   }
   
   ```
-- JPA 에서 NamedQuery 호출하기 
+- **JPA 에서 NamedQuery 호출하기** 
     ```   
     public class MemberRepository{
         public List<Member> findByUsername(String name){
@@ -124,18 +124,18 @@
     }
     ```
 
-- Spring JPA NamedQuery 사용
+- **Spring JPA NamedQuery 사용**
     ```
     @Query(name="Member.findByUsername")
     List<Member> findByUsername(@Param("username") String name);
   ```
   
-- Spring JPA NamedQuery 를 메서드 @Query 로 대체하기
+- **Spring JPA NamedQuery 를 메서드 @Query 로 대체하기**
     ```
     @Query("select m from Member m where m.username= :username and m.age = :age")
     List<Member> findUser(@Param("username") String username, @Param("age") int age);
   ``` 
-- Spring JPA Entity 대신 Dto 로 조회하기
+- **Spring JPA Entity 대신 Dto 로 조회하기**
     ```
     @Query("select new package.package..Dto(m.id, m.username... )) from Member m join m.team t")
     List<MemberDto> findMemberDto();
@@ -150,20 +150,20 @@ Parameter 바인딩은 위치(?) 와 이름기반(:) 으로 나뉘어진다. 주
     List<Member> findByNames(@Param("names") List<String> names);
     
 ## 반환 타입
-스프링 데이터 JPA는 유연한 반환 타입 지원
+**스프링 데이터 JPA는 유연한 반환 타입 지원**
     
     List<Member> findByUsername(String name);
     Member findUsername(Sting name);
     Optional<Member> findByUsername(String name);
     
-조회 결과
+**조회 결과**
     - 컬렉션 : 결과가 없으면 빈컬렉션 반환
     - 단건 : 결과없을시 null, 결과가 2건 이상 : NonUniqueResultExeption 발생
     
     
 
 ## 페이징과 정렬
-JPA 
+**JPA** 
     
     public List<Member> findByPage(int age, int offset, int limit){
         return em.createQuery("select m from Member m where m.age = :age order by m.username desc")
@@ -180,7 +180,7 @@ JPA
   
     } 
     
-Spring JPA
+**Spring JPA**
     
     public interface MemberRepository extends JpaRepository<Member, Long> {
         // count 쿼리 사용
@@ -200,11 +200,71 @@ Spring JPA
         Page<Member> page = memberRepository.findByAge(10, pageRequest);
     } 
 
-Spring JPA - CountQuery 추가 사용하기  
+**Spring JPA - CountQuery 추가 사용하기**  
     
     @Query(value = "select m from Member m", countQuery="select count(m.username) from Member m")
     Page<Member> findMemberAllcountCountBy(Pageable pageable); 
     
+## 벌크성 수정 쿼리
+한번에 대량의 DB를 업데이트 할때 사용하는 방법
+
+**JPA**
+    
+    int result = em.createQeury("update Member m set m.age = m.age +1 where m.age>= :age")
+            .setParameter("age", age)
+            .executeUpdate();
+   
+**Spring JPA**
+
+    @Modifying
+    @Query("update Member m set m.age = m.age +1 where m.age >= :age" )
+    int bulkAgePlus(@Param("age")int age);
+
+## Fetch Join 조회 : Entity Graph 조회
+**JPQL 페치조인**
+
+    @Query("select m from Member m left join fetch m.team" )
+    List<Member> findMemberFetchJoin();
+    
+    //Override 
+    @Override
+    @EntityGraph(attributePaths = {"team"})
+    List<Member> findAll();
+    
+    //JPQL + 엔티티그래프
+    @EntityGraph(attributePaths = {"team"})
+    @Query("select m from Member m")
+    List<Member> findMemberEntityGraph();
+    
+    //기본 메서드 + 엔티티그래프
+    @EntityGraph(attributePaths = {"team"})
+    List<Member> findByUsername(String username)
+    
+## 인터페이스 커스텀
+특정 기능을 별도로 만들고 싶을때, 인터페이스를 만들어 상속하게 한다.
+interface -> class 상속
+    
+    publc interface ...interfaceName...{
+        List<Member> findMemberCustom();
+    }
+    
+    @RequiredArgsConstructor
+    public class MemberRepositoryImpl implements ...interfaceName... {
+        @Override
+        List<Member> findMemberCustom(){
+            return em.createQuery("select m from Member m").getResultList();
+        } 
+    }
+    
+    public interface MemberRepository extends JpaRepository<Member, Long>, MemberRepositoryCustom {
+        
+    }
+
+## 
+    
+    
+    
+
 
 
 - JPA FIND 
