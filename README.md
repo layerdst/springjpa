@@ -204,6 +204,19 @@ Parameter 바인딩은 위치(?) 와 이름기반(:) 으로 나뉘어진다. 주
     
     @Query(value = "select m from Member m", countQuery="select count(m.username) from Member m")
     Page<Member> findMemberAllcountCountBy(Pageable pageable); 
+
+## Web 확장 - 페이징과 정렬
+
+    @GetMapping("/members")
+    public Page<Member> list(Pageable pageable){
+        Page<Member> page = memberRepository.findAll(pageable)'
+        return page;
+    }
+    
+요청 파라미터 
+ ex)members/page=0&size=3&sort=id,desc&sort=username,desc
+
+
     
 ## 벌크성 수정 쿼리
 한번에 대량의 DB를 업데이트 할때 사용하는 방법
@@ -260,7 +273,82 @@ interface -> class 상속
         
     }
 
-## 
+## Auditing 
+JPA의 @Embedded 의 유사한 기능으로 엔티티의 등록/수정일, 등록/수정자 를 추적할수 있게 하는 것
+
+JPA
+    
+    @MappedSuperclass
+    @Getter
+    public class JpaBaseEntity{
+        @Column(updatable = true)
+        private LocalDateTime createDate;
+        private LocalDateTime updatedDate;
+        
+        @PrePersist
+        public void prePersist(){
+            LocalDateTime now = LocalDateTime.now();
+            createDate = now;
+            updatedDate = now;
+        
+        }
+        
+        @PreUpdate
+        public void preUpdate(){
+            updatedDate = LocalDateTime.now()
+        }
+    
+    }
+    
+**Spring JPA**
+
+    @EntityListeners(AuditingEntityListener.class)
+    @MappedSuperclass
+    public class BaseEntity{
+        
+        @CreateDate
+        @Column(updatable = false)
+        private LocalDateTime createdDate;
+        
+        @LastModifiedDate
+        private LocalDateTime lastModifiedDate;
+        
+        @CreateBy
+        @Column(updatable = false)
+        private String createdBy;
+        
+        @LastModifiedBy
+        private String lastModifiedBy;
+        
+    
+    }
+    
+    //  Spring Bean 
+    @Bean
+    public AuditorAware<String> auditorProvider(){
+        return () -> Optional.of(UUID.randomUUID().toString());
+    }
+    
+    // 향샹된 Auditing -> extends 추가하기
+    public class BaseTimeEntity {
+        @CreatedDate
+        @Column(updatable = false)
+        private LocalDateTime createdDate;
+        
+        @LastModifiedDate
+        private LocalDateTime lastModifiedDate;
+    }
+    
+    public class BaseEntity extends BaseTimeEntity {
+        @CreatedBy
+        @Column(updatable = false)
+        private String createdBy;
+        
+        @LastModifiedBy
+        private String lastModifiedBy
+    }
+    
+
     
     
     
